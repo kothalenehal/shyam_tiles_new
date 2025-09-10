@@ -39,6 +39,8 @@ class _WishlistItemState extends State<WishlistItem> {
         }
       }
     } catch (e) {
+      // Consider adding proper error handling here
+      print('Error fetching wishlist: $e');
     } finally {
       setState(() {
         isLoading = false;
@@ -84,7 +86,7 @@ class _WishlistItemState extends State<WishlistItem> {
             child: RefreshIndicator(
               onRefresh: _refreshWishlist,
               child: isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : userWishlist.isEmpty
                       ? ListView(
                           children: [
@@ -145,11 +147,9 @@ class _WishlistItemState extends State<WishlistItem> {
   }
 }
 
-// ... rest of the code remains the same ...
-
 class ItemWidget extends StatelessWidget {
   final AppProducts item;
-  TextEditingController quantityController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
 
   ItemWidget({Key? key, required this.item}) : super(key: key);
 
@@ -157,21 +157,20 @@ class ItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 120,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
           border: Border(
               bottom: BorderSide(color: Colors.transparent),
               top: BorderSide(color: Colors.grey))),
       margin: const EdgeInsets.only(bottom: 1, top: 0),
       padding: const EdgeInsets.only(bottom: 0, left: 0),
       child: Row(
-        //crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GestureDetector(
             onTap: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => ProductDetails(item)));
             },
-            child: Container(
+            child: SizedBox(
               width: MediaQuery.of(context).size.width * 0.4,
               child: (item.image.isNotEmpty)
                   ? ClipRRect(
@@ -193,393 +192,379 @@ class ItemWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Container(
-                  margin: const EdgeInsets.only(left: 15),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          item.name,
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18,
-                              fontFamily: 'Roboto-Thin'),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          item.size,
-                          style: const TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontFamily: 'Roboto-Thin'),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    showDialog<String>(
-                      context: context,
-                      builder: (BuildContext context) => AlertDialog(
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15),
+                  Container(
+                    margin: const EdgeInsets.only(left: 15),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            item.name,
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                                fontFamily: 'Roboto-Thin'),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
                           ),
                         ),
-                        backgroundColor: const Color(0xffB4B4B4),
-                        title: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.only(top: 12.0),
-                              child: const Center(
-                                child: Text(
-                                  'Quantity :',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Roboto-Thin',
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 230,
-                              height: 40,
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Center(
-                                child: TextField(
-                                  controller: quantityController,
-                                  keyboardType: TextInputType.number,
-                                  textAlignVertical: TextAlignVertical.bottom,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(5.0),
-                                    ),
-                                    filled: true,
-                                    hintStyle: const TextStyle(
-                                        color: Color(0xffB4B4B4), fontSize: 14),
-                                    hintText:
-                                        "Please enter tiles quantity (minimum 1)..",
-                                    fillColor: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            item.size,
+                            style: const TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontFamily: 'Roboto-Thin'),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                          ),
                         ),
-                        actions: <Widget>[
-                          GestureDetector(
-                            onTap: () {
-                              if (quantityController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    backgroundColor: Colors.red,
-                                    content: Text(
-                                      "Please enter a quantity",
-                                      style: TextStyle(color: Colors.white),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      showDialog<String>(
+                        context: context,
+                        builder: (BuildContext context) => AlertDialog(
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(15),
+                            ),
+                          ),
+                          backgroundColor: const Color(0xffB4B4B4),
+                          title: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.only(top: 12.0),
+                                child: const Center(
+                                  child: Text(
+                                    'Quantity :',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Roboto-Thin',
+                                      color: Colors.white,
+                                      fontSize: 24,
                                     ),
                                   ),
-                                );
-                                return;
-                              }
-                              
-                              int quantity = int.tryParse(quantityController.text) ?? 0;
-                              
-                              if (quantity <= 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    backgroundColor: Colors.red,
-                                    content: Text(
-                                      "Please enter a valid quantity (greater than 0)",
-                                      style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              Container(
+                                width: 230,
+                                height: 40,
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Center(
+                                  child: TextField(
+                                    controller: quantityController,
+                                    keyboardType: TextInputType.number,
+                                    textAlignVertical: TextAlignVertical.bottom,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(5.0),
+                                      ),
+                                      filled: true,
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xffB4B4B4), fontSize: 14),
+                                      hintText:
+                                          "Please enter tiles quantity (minimum 1)..",
+                                      fillColor: Colors.white,
                                     ),
                                   ),
-                                );
-                                return;
-                              }
-                              
-                              if (quantity > item.quantity) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.red,
-                                    content: Text(
-                                      "Quantity exceeds available stock (${item.quantity})",
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              
-                              if (quantityController.text != "" &&
-                                  quantity > 0 &&
-                                  quantity <= item.quantity) {
-                                showDialog<String>(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(15),
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: <Widget>[
+                            GestureDetector(
+                              onTap: () {
+                                if (quantityController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      backgroundColor: Colors.red,
+                                      content: Text(
+                                        "Please enter a quantity",
+                                        style: TextStyle(color: Colors.white),
                                       ),
                                     ),
-                                    backgroundColor: const Color(0xffB4B4B4),
-                                    title: Column(
-                                      children: [
-                                        Image.asset('images/check.png'),
-                                        Container(
-                                          margin: const EdgeInsets.only(top: 0),
-                                          child: const Center(
-                                            child: Text(
-                                              'Available',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                fontFamily: 'Roboto-Thin',
-                                                color: Colors.white,
-                                                fontSize: 24,
+                                  );
+                                  return;
+                                }
+                                
+                                int quantity = int.tryParse(quantityController.text) ?? 0;
+                                
+                                if (quantity <= 0) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      backgroundColor: Colors.red,
+                                      content: Text(
+                                        "Please enter a valid quantity (greater than 0)",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                if (quantity > item.quantity) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: Colors.red,
+                                      content: Text(
+                                        "Quantity exceeds available stock (${item.quantity})",
+                                        style: const TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                if (quantityController.text.isNotEmpty &&
+                                    quantity > 0 &&
+                                    quantity <= item.quantity) {
+                                  showDialog<String>(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(15),
+                                        ),
+                                      ),
+                                      backgroundColor: const Color(0xffB4B4B4),
+                                      title: Column(
+                                        children: [
+                                          Image.asset('images/check.png'),
+                                          Container(
+                                            margin: const EdgeInsets.only(top: 0),
+                                            child: const Center(
+                                              child: Text(
+                                                'Available',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontFamily: 'Roboto-Thin',
+                                                  color: Colors.white,
+                                                  fontSize: 24,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(
-                                          width: 290,
-                                          height: 40,
-                                          child: Center(
-                                            child: Text(
-                                              'Click below to Enquire',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'Roboto-Thin',
-                                                color: Colors.black,
-                                                fontSize: 19,
+                                          const SizedBox(
+                                            width: 290,
+                                            height: 40,
+                                            child: Center(
+                                              child: Text(
+                                                'Click below to Enquire',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: 'Roboto-Thin',
+                                                  color: Colors.black,
+                                                  fontSize: 19,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: <Widget>[
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 60.0, right: 60.0, top: 1),
+                                          child: Container(
+                                            margin:
+                                                const EdgeInsets.only(bottom: 20),
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: <Color>[
+                                                      Color(0xff7e7e7e),
+                                                      Color(0xff7e7e7e)
+                                                    ]),
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            child: GestureDetector(
+                                              onTap: () async {
+                                                // await Enquiry()
+                                                //     .sendEnquiry(item.id!,
+                                                //         quantityController.text)
+                                                //     .then((value) {
+                                                //   if (value.status) {
+                                                //     Navigator.pop(context);
+                                                //     Navigator.pop(context);
+                                                //   }
+                                                // });
+                                              },
+                                              child: const Center(
+                                                child: Text(
+                                                  'Enquire',
+                                                  style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontFamily: 'Roboto-Thin',
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 19,
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                    actions: <Widget>[
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 60.0, right: 60.0, top: 1),
-                                        child: Container(
-                                          margin:
-                                              const EdgeInsets.only(bottom: 20),
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: <Color>[
-                                                    Color(0xff7e7e7e),
-                                                    Color(0xff7e7e7e)
-                                                  ]),
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          child: GestureDetector(
-                                            onTap: () async {
-                                              // await Enquiry()
-                                              //     .sendEnquiry(item.id!,
-                                              //         quantityController.text)
-                                              //     .then((value) {
-                                              //   if (value.status) {
-                                              //     Navigator.pop(context);
-                                              //     Navigator.pop(context);
-                                              //   }
-                                              // });
-                                              // // showDialog<String>(
-                                              // //     context:
-                                              // //         context,
-                                              // //     builder:
-                                              // //         (BuildContext
-                                              // //             context) {
-                                              // //       return Container();
-                                              // //     });
-                                            },
-                                            child: const Center(
-                                              child: Text(
-                                                'Enquire',
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontFamily: 'Roboto-Thin',
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 19,
-                                                ),
-                                              ),
+                                  );
+                                } else {
+                                  showDialog<String>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(15),
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                showDialog<String>(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(15),
-                                          ),
-                                        ),
-                                        backgroundColor:
-                                            const Color(0xffB4B4B4),
-                                        title: Column(
-                                          children: [
-                                            Image.asset('images/uncheck.png'),
-                                            Container(
-                                              margin:
-                                                  const EdgeInsets.only(top: 0),
-                                              child: const Center(
-                                                child: Text(
-                                                  'Unavailable',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontFamily: 'Roboto-Thin',
-                                                    color: Colors.white,
-                                                    fontSize: 24,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              width: 290,
-                                              height: 40,
-                                              child: Center(
-                                                child: Text(
-                                                  'Click below to Notify',
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    fontFamily: 'Roboto-Thin',
-                                                    color: Colors.black,
-                                                    fontSize: 19,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: <Widget>[
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 60.0,
-                                                right: 60.0,
-                                                top: 1),
-                                            child: Container(
-                                              margin: const EdgeInsets.only(
-                                                  bottom: 20),
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                  gradient:
-                                                      const LinearGradient(
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                          colors: <Color>[
-                                                        Color(0xff7e7e7e),
-                                                        Color(0xff7e7e7e)
-                                                      ]),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.pop(context);
-                                                },
+                                          backgroundColor:
+                                              const Color(0xffB4B4B4),
+                                          title: Column(
+                                            children: [
+                                              Image.asset('images/uncheck.png'),
+                                              Container(
+                                                margin:
+                                                    const EdgeInsets.only(top: 0),
                                                 child: const Center(
                                                   child: Text(
-                                                    'Notify',
+                                                    'Unavailable',
                                                     style: TextStyle(
-                                                      color: Colors.black,
+                                                      fontWeight: FontWeight.w500,
                                                       fontFamily: 'Roboto-Thin',
-                                                      fontWeight:
-                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                      fontSize: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: 290,
+                                                height: 40,
+                                                child: Center(
+                                                  child: Text(
+                                                    'Click below to Notify',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontFamily: 'Roboto-Thin',
+                                                      color: Colors.black,
                                                       fontSize: 19,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                        ],
-                                      );
-                                    });
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 55.0, right: 55.0, top: 5, bottom: 30),
-                              child: Container(
-                                height: 40,
-                                decoration: BoxDecoration(
-                                    color: Color(0xff000000),
-                                    // gradient: const LinearGradient(
-                                    //     begin: Alignment.topLeft,
-                                    //     end: Alignment.bottomRight,
-                                    //     colors: <Color>[
-                                    //       Color(0xff7e7e7e),
-                                    //       Color(0xff7e7e7e)
-                                    //     ]),
-                                    borderRadius: BorderRadius.circular(10)),
-                                child: const Center(
-                                  child: Text(
-                                    'Check',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: 'Roboto-Thin',
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 19,
+                                          actions: <Widget>[
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 60.0,
+                                                  right: 60.0,
+                                                  top: 1),
+                                              child: Container(
+                                                margin: const EdgeInsets.only(
+                                                    bottom: 20),
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                    gradient:
+                                                        const LinearGradient(
+                                                            begin:
+                                                                Alignment.topLeft,
+                                                            end: Alignment
+                                                                .bottomRight,
+                                                            colors: <Color>[
+                                                          Color(0xff7e7e7e),
+                                                          Color(0xff7e7e7e)
+                                                        ]),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Center(
+                                                    child: Text(
+                                                      'Notify',
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontFamily: 'Roboto-Thin',
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 19,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      });
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 55.0, right: 55.0, top: 5, bottom: 30),
+                                child: Container(
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xff000000),
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: const Center(
+                                    child: Text(
+                                      'Check',
+                                      style: TextStyle(
+                                        color: Colors.white, // Changed from black to white
+                                        fontFamily: 'Roboto-Thin',
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 19,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0, left: 15, right: 15),
-                    child: Container(
-                      height: 39,
-                      decoration: BoxDecoration(
-                          color: Color(0xff000000),
-                          borderRadius: BorderRadius.circular(5)),
-                      child: Center(
-                        child: Text(
-                          'Check Availability',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0,
+                          ],
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10.0, left: 15, right: 15),
+                      child: Container(
+                        height: 39,
+                        decoration: BoxDecoration(
+                            color: const Color(0xff000000),
+                            borderRadius: BorderRadius.circular(5)),
+                        child: Center(
+                          child: Text(
+                            'Check Availability',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
