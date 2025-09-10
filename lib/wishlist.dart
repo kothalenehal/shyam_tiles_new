@@ -60,9 +60,10 @@ class _WishlistItemState extends State<WishlistItem> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      child: Column(
+    return SafeArea(
+      child: Container(
+        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - 120, // Account for all system UI
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 8.0, bottom: 8),
@@ -89,6 +90,9 @@ class _WishlistItemState extends State<WishlistItem> {
                   ? const Center(child: CircularProgressIndicator())
                   : userWishlist.isEmpty
                       ? ListView(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 120, // More generous padding for bottom nav bar
+                          ),
                           children: [
                             SizedBox(
                               height: MediaQuery.of(context).size.height - 299,
@@ -107,6 +111,9 @@ class _WishlistItemState extends State<WishlistItem> {
                           ],
                         )
                       : ListView.builder(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 120, // More generous padding for bottom nav bar
+                          ),
                           itemCount: userWishlist.length,
                           itemBuilder: (context, index) {
                             return SwipeActionCell(
@@ -143,6 +150,7 @@ class _WishlistItemState extends State<WishlistItem> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -156,7 +164,7 @@ class ItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 120,
+      height: 125, // Increased height to prevent overflow
       decoration: const BoxDecoration(
           border: Border(
               bottom: BorderSide(color: Colors.transparent),
