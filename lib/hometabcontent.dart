@@ -116,31 +116,42 @@ class _HomeContentState extends State<HomeContent> {
   void fetchProducts() async {
     allProducts.clear();
     trendingProducts.clear();
-
     latestProducts.clear();
+    
     AppProducts appProducts = AppProducts();
-
     ResponseSmartAuditor responseSmartAuditor = await appProducts.getProducts();
 
-    if (responseSmartAuditor.status) {
-      var appCategoriesList = responseSmartAuditor.body;
-      if (appCategoriesList != null && appCategoriesList is List<dynamic>) {
-        setState(() {
-          for (Map<String, dynamic> dict in appCategoriesList) {
-            appProducts = AppProducts();
-            appProducts.dictToObject(dict);
-            allProducts.add(appProducts);
+    print("fetchProducts - Status: ${responseSmartAuditor.status}");
+    print("fetchProducts - StatusMessage: ${responseSmartAuditor.statusMessage}");
+    print("fetchProducts - ErrorMessage: ${responseSmartAuditor.errorMessage}");
 
-            if (appProducts.trending == 1) trendingProducts.add(appProducts);
-            if (appProducts.bestprice_deal == 1) bestDealProducts = appProducts;
-            if (appProducts.latest_product == 1) {
-              latestProducts.add(appProducts);
+    if (responseSmartAuditor.status) {
+      var productsList = responseSmartAuditor.body;
+      print("fetchProducts - Body type: ${productsList.runtimeType}");
+      print("fetchProducts - Body: $productsList");
+      
+      if (productsList != null && productsList is List<AppProducts>) {
+        setState(() {
+          for (AppProducts product in productsList) {
+            allProducts.add(product);
+
+            if (product.trending == 1) trendingProducts.add(product);
+            if (product.bestprice_deal == 1) bestDealProducts = product;
+            if (product.latest_product == 1) {
+              latestProducts.add(product);
             }
           }
+          print("fetchProducts - Total products: ${allProducts.length}");
+          print("fetchProducts - Trending products: ${trendingProducts.length}");
+          print("fetchProducts - Latest products: ${latestProducts.length}");
           widget.refreshDrawer();
         });
+      } else {
+        print("fetchProducts - Invalid response body type or null");
       }
-    } else {}
+    } else {
+      print("fetchProducts - API call failed: ${responseSmartAuditor.errorMessage}");
+    }
   }
 
   void fetchBanners() async {
@@ -748,7 +759,7 @@ class _HomeContentState extends State<HomeContent> {
                         controller: _scrollController1,
                         itemCount: row1.length,
                         itemBuilder: (context, index) {
-                          return buildImageContainer(row1[index].image);
+                          return buildImageContainer(row1[index]);
                         },
                       ),
                     ),
@@ -769,7 +780,7 @@ class _HomeContentState extends State<HomeContent> {
                         controller: _scrollController2,
                         itemCount: row2.length,
                         itemBuilder: (context, index) {
-                          return buildImageContainer(row2[index].image);
+                          return buildImageContainer(row2[index]);
                         },
                       ),
                     ),
@@ -788,7 +799,7 @@ class _HomeContentState extends State<HomeContent> {
                           controller: _scrollController3,
                           itemCount: row3.length,
                           itemBuilder: (context, index) {
-                            return buildImageContainer(row3[index].image);
+                            return buildImageContainer(row3[index]);
                           },
                         ),
                       ),
@@ -1183,16 +1194,34 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget buildImageContainer(String imageUrl) {
-    return Container(
-      width: MediaQuery.of(context).size.width / 1.1,
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.fill,
+  Widget buildImageContainer(AppGallery galleryItem) {
+    return GestureDetector(
+      onTap: () async {
+        if (galleryItem.instagramUrl.isNotEmpty) {
+          try {
+            final Uri url = Uri.parse(galleryItem.instagramUrl);
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error opening Instagram: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width / 1.1,
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(galleryItem.image),
+            fit: BoxFit.fill,
+          ),
+          borderRadius: BorderRadius.circular(12),
         ),
-        borderRadius: BorderRadius.circular(12),
+        child: null, // Instagram logo removed
       ),
     );
   }

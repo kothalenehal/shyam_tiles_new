@@ -38,6 +38,7 @@ class AppBanners {
 class AppGallery {
   var image = "";
   var location = "";
+  var instagramUrl = "";
 
   void dictToObject(json) {
     if (json['image'] is String) {
@@ -47,6 +48,10 @@ class AppGallery {
 
     if (json['location'] is String) {
       location = json['location'];
+    }
+
+    if (json['instagram_url'] is String) {
+      instagramUrl = json['instagram_url'];
     }
   }
 

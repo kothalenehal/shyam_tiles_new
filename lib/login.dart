@@ -5,6 +5,7 @@ import 'package:shyam_tiles/common/reponse.dart';
 import 'package:shyam_tiles/model/user.dart';
 import 'homepage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'test_login_page.dart';
 
 TextEditingController txtMobileNumber = TextEditingController(text: "");
 TextEditingController txtPassword = TextEditingController(text: "");
@@ -190,6 +191,13 @@ class _LoginState extends State<Login> {
                                       await appUser.userLogin();
 
                                   UtilFunctions.hideLoader();
+                                  
+                                  // Add debugging information
+                                  print("Login Response Status: ${responseSmartAuditor.status}");
+                                  print("Login Response Message: ${responseSmartAuditor.statusMessage}");
+                                  print("Login Response Error: ${responseSmartAuditor.errorMessage}");
+                                  print("Login Response Body: ${responseSmartAuditor.body}");
+                                  
                                   if (responseSmartAuditor.status &&
                                       responseSmartAuditor.body != null) {
                                     var data = responseSmartAuditor.body;
@@ -218,15 +226,16 @@ class _LoginState extends State<Login> {
                                             Container(
                                               margin:
                                                   const EdgeInsets.only(top: 0),
-                                              child: const Center(
+                                              child: Center(
                                                 child: Text(
-                                                  'Login failed!! Invalid credentials',
+                                                  'Login failed!!\n${responseSmartAuditor.errorMessage.isNotEmpty ? responseSmartAuditor.errorMessage : 'Invalid credentials'}',
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.w500,
                                                     fontFamily: 'Roboto-Thin',
                                                     color: Colors.white,
-                                                    fontSize: 24,
+                                                    fontSize: 20,
                                                   ),
+                                                  textAlign: TextAlign.center,
                                                 ),
                                               ),
                                             ),
@@ -296,6 +305,39 @@ class _LoginState extends State<Login> {
                                   fontWeight: FontWeight.w500,
                                   fontSize: 20,
                                 ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Add test button for debugging
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 20.0, right: 20.0, top: 16, bottom: 0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TestLoginPage(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Test Credentials (Debug)',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
