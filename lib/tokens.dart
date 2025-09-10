@@ -5,6 +5,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shyam_tiles/model/user.dart';
+import 'package:shyam_tiles/qrcode.dart';
 
 class TokenScreen extends StatefulWidget {
   const TokenScreen({super.key});
@@ -35,36 +36,63 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'GET', Uri.parse('http://16.171.177.96/index.php/api/token/get'));
-    request.body = json.encode({
-      "vendor_id": "226" // Make sure this matches the correct vendor ID
-    });
+        'GET', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/get?vendor_id=${AppUser.sharedInstance.id}'));
     request.headers.addAll(headers);
 
     try {
+      print('Token API Request - URL: ${request.url}');
+      print('Token API Request - Vendor ID: ${AppUser.sharedInstance.id}');
+      
       http.StreamedResponse response = await request.send();
 
+      print('Token API Response - Status Code: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         String responseBody = await response.stream.bytesToString();
+        print('Token API Response - Body: $responseBody');
         var jsonResponse = json.decode(responseBody);
 
         if (jsonResponse['status'] == "success") {
-          List<Token> fetchedTokens = [];
+          // Group products by token_id and customer_name
+          Map<String, Token> tokenMap = {};
+          
           for (var tokenData in jsonResponse['data']) {
-            fetchedTokens.add(Token(
-              name: tokenData['customer_name'],
-              tokenNumber: tokenData['token_id'],
-              date: tokenData['date'],
-              products: [
-                Product(
+            // Only process non-deleted tokens
+            if (tokenData['is_deleted'] == "0" && tokenData['deleted_at'] == null) {
+              String tokenKey = '${tokenData['token_id']}_${tokenData['customer_name']}';
+              
+              if (tokenMap.containsKey(tokenKey)) {
+                // Add product to existing token
+                tokenMap[tokenKey]!.products.add(Product(
                   id: tokenData['id'],
                   name: tokenData['product_name'],
                   size: tokenData['size'],
                   quantity: int.parse(tokenData['quantity']),
-                )
-              ],
-            ));
+                ));
+              } else {
+                // Create new token
+                tokenMap[tokenKey] = Token(
+                  name: tokenData['customer_name'],
+                  tokenNumber: tokenData['token_id'],
+                  date: tokenData['date'],
+                  products: [
+                    Product(
+                      id: tokenData['id'],
+                      name: tokenData['product_name'],
+                      size: tokenData['size'],
+                      quantity: int.parse(tokenData['quantity']),
+                    )
+                  ],
+                );
+              }
+            }
           }
+          
+          List<Token> fetchedTokens = tokenMap.values.toList();
+          
+          print('Token API - Total entries: ${jsonResponse['data'].length}');
+          print('Token API - Active tokens: ${fetchedTokens.length}');
+          print('Token API - Tokens filtered out (deleted): ${jsonResponse['data'].length - fetchedTokens.length}');
 
           setState(() {
             tokens = fetchedTokens;
@@ -72,12 +100,14 @@ class _TokenScreenState extends State<TokenScreen> {
           });
         } else {
           print('Failed to fetch tokens: ${jsonResponse['message']}');
+          print('Token API Response Status: ${jsonResponse['status']}');
           setState(() {
             isLoading = false;
           });
         }
       } else {
         print('Failed to fetch tokens: ${response.reasonPhrase}');
+        print('Token API Response Status Code: ${response.statusCode}');
         setState(() {
           isLoading = false;
         });
@@ -102,34 +132,52 @@ class _TokenScreenState extends State<TokenScreen> {
 
     var request = http.Request(
       'POST',
-      Uri.parse('http://16.171.177.96/index.php/api/delete_token'),
+      Uri.parse('https://galactics.co.in/shyamtiles_updated/api/delete_token'),
     );
     request.body = json.encode({
       "token_id": tokenId,
     });
     request.headers.addAll(headers);
 
-    http.StreamedResponse response = await request.send();
+    print('Delete Token API Request - URL: ${request.url}');
+    print('Delete Token API Request - Body: ${request.body}');
+    print('Delete Token API Request - Token ID: $tokenId');
 
-    if (response.statusCode == 200) {
-      String responseBody = await response.stream.bytesToString();
-      var jsonResponse = json.decode(responseBody);
-      if (jsonResponse['status'] == true) {
-        // Token deleted successfully
-        setState(() {
-          tokens
-              .removeWhere((token) => token.tokenNumber == tokenId.toString());
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Token deleted successfully')),
-        );
+    try {
+      http.StreamedResponse response = await request.send();
+
+      print('Delete Token API Response - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        String responseBody = await response.stream.bytesToString();
+        print('Delete Token API Response - Body: $responseBody');
+        var jsonResponse = json.decode(responseBody);
+        
+        if (jsonResponse['status'] == true || jsonResponse['status'] == "success") {
+          // Token deleted successfully
+          setState(() {
+            tokens.removeWhere((token) => token.tokenNumber == tokenId.toString());
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Token deleted successfully')),
+          );
+        } else {
+          print('Delete Token API Error: ${jsonResponse['message']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete token: ${jsonResponse['message'] ?? 'Unknown error'}')),
+          );
+        }
       } else {
+        print('Delete Token API Error: ${response.reasonPhrase}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete token')),
+          SnackBar(content: Text('Failed to delete token: ${response.reasonPhrase}')),
         );
       }
-    } else {
-      print(response.reasonPhrase);
+    } catch (e) {
+      print('Error deleting token: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting token: $e')),
+      );
     }
   }
 
@@ -139,7 +187,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=hf8j8cr99f4lnftihourp6bqktqd22ji'
     };
     var request = http.Request(
-        'POST', Uri.parse('http://16.171.177.96/index.php/api/product_names'));
+        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/product_names'));
 
     // Add location to the request body
     request.body = json.encode({"location": AppUser.sharedInstance.location});
@@ -147,10 +195,17 @@ class _TokenScreenState extends State<TokenScreen> {
     request.headers.addAll(headers);
 
     try {
+      print('Product Names API Request - URL: ${request.url}');
+      print('Product Names API Request - Body: ${request.body}');
+      print('Product Names API Request - Location: ${AppUser.sharedInstance.location}');
+      
       http.StreamedResponse response = await request.send();
+
+      print('Product Names API Response - Status Code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         String responseBody = await response.stream.bytesToString();
+        print('Product Names API Response - Body: $responseBody');
         var jsonResponse = json.decode(responseBody);
         if (jsonResponse['status'] == true) {
           setState(() {
@@ -159,19 +214,22 @@ class _TokenScreenState extends State<TokenScreen> {
                     item['locations'] == AppUser.sharedInstance.location)
                 .map((item) => item['name']));
           });
+          print('Product Names API - Loaded ${productNames.length} products');
+        } else {
+          print('Product Names API Error: ${jsonResponse['message']}');
         }
       } else {
-        print('Error: ${response.reasonPhrase}');
+        print('Product Names API Error: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Exception occurred: $e');
+      print('Product Names API Exception: $e');
     }
   }
 
   Future<bool> saveToken(Token token) async {
     var headers = {'Content-Type': 'application/json'};
     var request = http.Request(
-        'POST', Uri.parse('http://16.171.177.96/index.php/api/token/store'));
+        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/index.php/api/token/store'));
 
     // Convert the token data to the required format
     var requestBody = {
@@ -204,6 +262,55 @@ class _TokenScreenState extends State<TokenScreen> {
       }
     } catch (e) {
       print('Error saving token: $e');
+      return false;
+    }
+  }
+
+  Future<bool> editToken(Token token) async {
+    var headers = {'Content-Type': 'application/json'};
+    var request = http.Request(
+        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/api/edit_token'));
+
+    // For single product edit (current implementation)
+    var requestBody = {
+      "token_id": token.tokenNumber,
+      "customer_name": token.name,
+      "date": token.date,
+      "vendor_id": AppUser.sharedInstance.id,
+      "product_id": token.products.isNotEmpty ? token.products.first.id : null,
+      "product_name": token.products.isNotEmpty ? token.products.first.name : "",
+      "size": token.products.isNotEmpty ? token.products.first.size : "",
+      "quantity": token.products.isNotEmpty ? token.products.first.quantity : 0
+    };
+
+    print('Edit Token API Request - URL: ${request.url}');
+    print('Edit Token API Request - Body: ${json.encode(requestBody)}');
+
+    request.body = json.encode(requestBody);
+    request.headers.addAll(headers);
+
+    try {
+      http.StreamedResponse response = await request.send();
+
+      print('Edit Token API Response - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        String responseBody = await response.stream.bytesToString();
+        print('Edit Token API Response - Body: $responseBody');
+        var jsonResponse = json.decode(responseBody);
+        
+        if (jsonResponse['status'] == "success" || jsonResponse['status'] == true) {
+          return true;
+        } else {
+          print('Edit Token API Error: ${jsonResponse['message']}');
+          return false;
+        }
+      } else {
+        print('Edit Token API Error: ${response.reasonPhrase}');
+        return false;
+      }
+    } catch (e) {
+      print('Error editing token: $e');
       return false;
     }
   }
@@ -335,6 +442,13 @@ class _TokenScreenState extends State<TokenScreen> {
                 Navigator.of(context).pop(true);
                 if (action == 'delete' && tokenId != null) {
                   deleteToken(tokenId); // Call deleteToken if confirmed
+                } else if (action == 'edit') {
+                  // Find the token to edit
+                  Token? tokenToEdit = tokens.firstWhere(
+                    (token) => token.tokenNumber == tokenId.toString(),
+                    orElse: () => throw Exception('Token not found'),
+                  );
+                  _showEditTokenBottomSheet(context, tokenToEdit);
                 }
               },
               child: const Text('Confirm'),
@@ -377,12 +491,355 @@ class _TokenScreenState extends State<TokenScreen> {
     );
   }
 
+  void _showEditTokenBottomSheet(BuildContext context, Token tokenToEdit) {
+    final TextEditingController nameController = TextEditingController(text: tokenToEdit.name);
+    final TextEditingController dateController = TextEditingController(text: tokenToEdit.date);
+
+    // For single product edit, take the first product
+    Product productToEdit = tokenToEdit.products.isNotEmpty ? tokenToEdit.products.first : Product(id: '', name: '', size: '', quantity: 0);
+
+    showModalBottomSheet(
+      context: context,
+      isDismissible: true,
+      enableDrag: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: DraggableScrollableSheet(
+                  initialChildSize: 1.0,
+                  minChildSize: 0.5,
+                  maxChildSize: 1.0,
+                  builder: (_, controller) {
+                    return ListView(controller: controller, children: [
+                      Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          "Edit Token",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                        labelText: 'Customer Name',
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      controller: dateController,
+                                      decoration: InputDecoration(
+                                        labelText: 'Date',
+                                        suffixIcon: IconButton(
+                                          icon:
+                                              const Icon(Icons.calendar_today),
+                                          onPressed: () async {
+                                            DateTime? pickedDate =
+                                                await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.now(),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                            );
+                                            if (pickedDate != null) {
+                                              setModalState(() {
+                                                dateController.text = pickedDate
+                                                    .toString()
+                                                    .split(' ')[0];
+                                              });
+                                            }
+                                          },
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      readOnly: true,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Product details (single product for now)
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: DropdownButtonFormField<String>(
+                                            value: productToEdit.name.isNotEmpty
+                                                ? productToEdit.name
+                                                : null,
+                                            decoration: InputDecoration(
+                                              labelText: 'Select Product',
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            items: productNames
+                                                .map((name) =>
+                                                    DropdownMenuItem(
+                                                      value: name,
+                                                      child: Text(name),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (value) {
+                                              setModalState(() {
+                                                productToEdit.name = value ?? '';
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        SizedBox(
+                                          width: 40,
+                                          height: 40,
+                                          child: ElevatedButton(
+                                            onPressed: () async {
+                                              // Open QR scanner for token selection
+                                              final result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => QRViewExample(isForTokenSelection: true),
+                                                ),
+                                              );
+                                              
+                                              if (result != null) {
+                                                setModalState(() {
+                                                  // Create a new Product instance with updated data
+                                                  productToEdit = Product(
+                                                    id: result['id'] ?? productToEdit.id,
+                                                    name: result['name'] ?? productToEdit.name,
+                                                    size: result['size'] ?? productToEdit.size,
+                                                    quantity: int.tryParse(result['quantity']?.toString() ?? '1') ?? productToEdit.quantity,
+                                                  );
+                                                });
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              foregroundColor: Colors.white,
+                                              padding: EdgeInsets.zero,
+                                              minimumSize: Size.zero,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            child: const Icon(Icons.qr_code_scanner, size: 16),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: DropdownButtonFormField<String>(
+                                            value: productToEdit.size.isNotEmpty
+                                                ? productToEdit.size
+                                                : null,
+                                            decoration: InputDecoration(
+                                              labelText: 'Size',
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            items: [
+                                              '8x10',
+                                              '10x10',
+                                              '12x12'
+                                            ]
+                                                .map((size) =>
+                                                    DropdownMenuItem(
+                                                      value: size,
+                                                      child: Text(size),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (value) {
+                                              setModalState(() {
+                                                productToEdit.size = value ?? '';
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextField(
+                                            keyboardType:
+                                                TextInputType.number,
+                                            controller: TextEditingController(text: productToEdit.quantity.toString()),
+                                            decoration: InputDecoration(
+                                              labelText: 'Quantity',
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onChanged: (value) {
+                                              setModalState(() {
+                                                productToEdit.quantity =
+                                                    int.tryParse(value) ?? 0;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () async {
+                                              // Open QR scanner for token selection
+                                              final result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => QRViewExample(isForTokenSelection: true),
+                                                ),
+                                              );
+                                              
+                                              if (result != null) {
+                                                setModalState(() {
+                                                  // Create a new Product instance with updated data
+                                                  productToEdit = Product(
+                                                    id: result['id'] ?? productToEdit.id,
+                                                    name: result['name'] ?? productToEdit.name,
+                                                    size: result['size'] ?? productToEdit.size,
+                                                    quantity: int.tryParse(result['quantity']?.toString() ?? '1') ?? productToEdit.quantity,
+                                                  );
+                                                });
+                                              }
+                                            },
+                                            icon: const Icon(Icons.qr_code_scanner),
+                                            label: const Text('Scan QR'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          // Create updated token
+                                          Token updatedToken = Token(
+                                            name: nameController.text,
+                                            tokenNumber: tokenToEdit.tokenNumber,
+                                            date: dateController.text,
+                                            products: [productToEdit],
+                                          );
+
+                                          bool edited = await editToken(updatedToken);
+
+                                          if (edited) {
+                                            // Update the token in the list
+                                            setState(() {
+                                              int index = tokens.indexWhere(
+                                                (token) => token.tokenNumber == tokenToEdit.tokenNumber
+                                              );
+                                              if (index != -1) {
+                                                tokens[index] = updatedToken;
+                                              }
+                                            });
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'Token updated successfully')),
+                                            );
+                                          } else {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'Failed to update token')),
+                                            );
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "Update Token",
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ))
+                    ]);
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAddTokenBottomSheet(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController dateController =
         TextEditingController(text: DateTime.now().toString().split(' ')[0]);
 
     List<Product> products = [];
+    
+    // Fetch product names when opening the bottom sheet
+    fetchProductNames();
 
     bool isFormValid() {
       return nameController.text.isNotEmpty &&
@@ -530,14 +987,61 @@ class _TokenScreenState extends State<TokenScreen> {
                                                   },
                                                 ),
                                               ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete),
-                                                onPressed: () {
-                                                  setModalState(() {
-                                                    products.removeWhere((p) =>
-                                                        p.id == product.id);
-                                                  });
-                                                },
+                                              const SizedBox(width: 4),
+                                              SizedBox(
+                                                width: 40,
+                                                height: 40,
+                                                child: ElevatedButton(
+                                                  onPressed: () async {
+                                                    // Open QR scanner for token selection
+                                                    final result = await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => QRViewExample(isForTokenSelection: true),
+                                                      ),
+                                                    );
+                                                    
+                                                    if (result != null) {
+                                                      setModalState(() {
+                                                        product.name = result['name'] ?? product.name;
+                                                        product.size = result['size'] ?? product.size;
+                                                        product.quantity = int.tryParse(result['quantity']?.toString() ?? '1') ?? product.quantity;
+                                                      });
+                                                    }
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.blue,
+                                                    foregroundColor: Colors.white,
+                                                    padding: EdgeInsets.zero,
+                                                    minimumSize: Size.zero,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                  ),
+                                                  child: const Icon(Icons.qr_code_scanner, size: 16),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              SizedBox(
+                                                width: 40,
+                                                height: 40,
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    setModalState(() {
+                                                      products.removeWhere((p) =>
+                                                          p.id == product.id);
+                                                    });
+                                                  },
+                                                  icon: const Icon(Icons.delete, color: Colors.grey, size: 16),
+                                                  style: IconButton.styleFrom(
+                                                    backgroundColor: Colors.grey.shade200,
+                                                    padding: EdgeInsets.zero,
+                                                    minimumSize: Size.zero,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -605,17 +1109,54 @@ class _TokenScreenState extends State<TokenScreen> {
                                         ],
                                       );
                                     }).toList(),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setModalState(() {
-                                          products.add(Product(
-                                              id: DateTime.now().toString(),
-                                              name: '',
-                                              size: '',
-                                              quantity: 0));
-                                        });
-                                      },
-                                      child: const Text('Add Product'),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              setModalState(() {
+                                                products.add(Product(
+                                                    id: DateTime.now().toString(),
+                                                    name: '',
+                                                    size: '',
+                                                    quantity: 0));
+                                              });
+                                            },
+                                            child: const Text('Add Product'),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () async {
+                                              // Open QR scanner for token selection
+                                              final result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => QRViewExample(isForTokenSelection: true),
+                                                ),
+                                              );
+                                              
+                                              if (result != null) {
+                                                setModalState(() {
+                                                  products.add(Product(
+                                                    id: result['id'] ?? DateTime.now().toString(),
+                                                    name: result['name'] ?? '',
+                                                    size: result['size'] ?? '',
+                                                    quantity: int.tryParse(result['quantity']?.toString() ?? '1') ?? 1,
+                                                  ));
+                                                });
+                                              }
+                                            },
+                                            icon: const Icon(Icons.qr_code_scanner),
+                                            label: const Text('Scan QR'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blue,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 16),
                                     SizedBox(
