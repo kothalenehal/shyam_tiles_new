@@ -1,0 +1,107 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+class VendorTest {
+  static const String baseUrl = "https://galactics.co.in/shyamtiles_updated";
+  
+  // Test credentials from the code comments
+  static const List<Map<String, String>> testCredentials = [
+    {"contact": "123456789", "password": "1234", "description": "From code comments"},
+    {"contact": "226", "password": "1234", "description": "Vendor ID from tokens.dart"},
+    {"contact": "9988776655", "password": "1234", "description": "Contact from ContactData API"},
+    {"contact": "1", "password": "1234", "description": "Test with ID 1"},
+    {"contact": "admin", "password": "admin", "description": "Common admin credentials"},
+    {"contact": "admin", "password": "1234", "description": "Admin with common password"},
+  ];
+
+  static Future<void> testAllCredentials() async {
+    print("=== Testing Vendor Login Credentials ===\n");
+    
+    for (var credentials in testCredentials) {
+      await testLogin(credentials);
+    }
+    
+    print("\n=== Testing Complete ===");
+    print("If all tests failed, you need to:");
+    print("1. Check with your backend team for valid vendor credentials");
+    print("2. Verify the vendor table structure in the database");
+    print("3. Ensure the login API is working correctly");
+  }
+
+  static Future<void> testLogin(Map<String, String> credentials) async {
+    try {
+      final String url = "$baseUrl/index.php/apis/Login";
+      
+      final Map<String, dynamic> body = {
+        "contact": credentials["contact"],
+        "password": credentials["password"],
+      };
+
+      print("Testing: ${credentials['description']}");
+      print("Contact: ${credentials['contact']}");
+      print("Password: ${credentials['password']}");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: json.encode(body),
+      );
+
+      print("Status Code: ${response.statusCode}");
+      print("Response: ${response.body}");
+      
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['statusCode'] == 200) {
+          print("✅ SUCCESS! Valid credentials found!");
+          print("User Data: ${jsonResponse['data']}");
+        } else {
+          print("❌ Login failed: ${jsonResponse['statusMessage']}");
+        }
+      } else {
+        print("❌ HTTP Error: ${response.statusCode}");
+      }
+      
+      print("---\n");
+    } catch (e) {
+      print("❌ Error: $e\n");
+    }
+  }
+
+  static Future<void> testContactData() async {
+    print("=== Testing Contact Data API ===\n");
+    
+    try {
+      final String url = "$baseUrl/index.php/apis/ContactData";
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      );
+
+      print("Status Code: ${response.statusCode}");
+      print("Response: ${response.body}");
+      
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['statusCode'] == 200) {
+          print("✅ Contact data retrieved successfully!");
+          final contactData = jsonResponse['data']['contact'];
+          print("Contact Number: ${contactData['contact']}");
+          print("Email: ${contactData['email']}");
+          print("Location: ${contactData['location']}");
+        }
+      }
+      
+      print("---\n");
+    } catch (e) {
+      print("❌ Error: $e\n");
+    }
+  }
+}
+
+

@@ -5,6 +5,10 @@ import 'package:shyam_tiles/model/appProducts.dart';
 import 'product_details.dart';
 
 class QRViewExample extends StatefulWidget {
+  final bool isForTokenSelection; // New parameter to determine behavior
+  
+  QRViewExample({this.isForTokenSelection = false});
+  
   @override
   _QRViewExampleState createState() => _QRViewExampleState();
 }
@@ -27,7 +31,10 @@ class _QRViewExampleState extends State<QRViewExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Scan QR Code')),
+      appBar: AppBar(
+        title: Text(widget.isForTokenSelection ? 'Scan Product QR Code' : 'Scan QR Code'),
+        backgroundColor: widget.isForTokenSelection ? Colors.blue.shade600 : null,
+      ),
       body: Stack(
         children: [
           QRView(
@@ -36,7 +43,23 @@ class _QRViewExampleState extends State<QRViewExample> {
           ),
           if (isScanning)
             Center(
-              child: CircularProgressIndicator(), // Show loading indicator
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.isForTokenSelection 
+                        ? 'Loading product details...' 
+                        : 'Loading product details...',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
@@ -151,13 +174,25 @@ class _QRViewExampleState extends State<QRViewExample> {
         Map<String, dynamic> productData = response.body;
         print("Product data: $productData");
         product.dictToObject(productData);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetails(product),
-          ),
-        ).then((_) =>
-            _resetScanState()); // Reset state when returning from ProductDetails
+        
+        if (widget.isForTokenSelection) {
+          // For token selection, return the product data
+          Navigator.pop(context, {
+            'name': product.name,
+            'size': product.size,
+            'id': product.id,
+            'category': product.category,
+            'quantity': product.quantity,
+          });
+        } else {
+          // For normal product viewing, navigate to product details
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetails(product),
+            ),
+          ).then((_) => _resetScanState());
+        }
       } else {
         String errorMsg = response.statusMessage ?? "Unknown error";
         String detailedError =

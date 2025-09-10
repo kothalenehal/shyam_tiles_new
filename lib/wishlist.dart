@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_swipe_action_cell/flutter_swipe_action_cell.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shyam_tiles/common/reponse.dart';
@@ -36,11 +37,8 @@ class _WishlistItemState extends State<WishlistItem> {
             }
           });
         }
-      } else {
-        print("Failed to fetch wishlist: ${responseSmartAuditor.errorMessage}");
       }
     } catch (e) {
-      print("Exception in fetchWishlist: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -55,14 +53,11 @@ class _WishlistItemState extends State<WishlistItem> {
   @override
   void initState() {
     super.initState();
-    print("WishlistItem initState called");
     fetchWishlist();
   }
 
   @override
   Widget build(BuildContext context) {
-    print("WishlistItem build method called");
-    print("userWishlist length: ${userWishlist.length}");
     return Container(
       height: MediaQuery.of(context).size.height,
       child: Column(
@@ -177,7 +172,7 @@ class ItemWidget extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => ProductDetails(item)));
             },
             child: Container(
-              width: MediaQuery.of(context).size.width / 2.5,
+              width: MediaQuery.of(context).size.width * 0.4,
               child: (item.image.isNotEmpty)
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
@@ -192,37 +187,42 @@ class ItemWidget extends StatelessWidget {
                     ),
             ),
           ),
-          Container(
-            width: MediaQuery.of(context).size.width / 2 - 30,
-            padding: const EdgeInsets.only(top: 20),
-            child: Column(
-              //mainAxisSize: MainAxisSize.max,
-              //crossAxisAlignment: CrossAxisAlignment.center,
-              //mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.only(top: 20, right: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 Container(
-                  width: MediaQuery.of(context).size.width / 2,
                   margin: const EdgeInsets.only(left: 15),
                   child: Row(
                     children: [
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 21,
-                            fontFamily: 'Roboto-Thin'),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                              fontFamily: 'Roboto-Thin'),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
                       ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Container(
-                        child: Text(item.size,
-                            style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                fontFamily: 'Roboto-Thin')),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          item.size,
+                          style: const TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              fontFamily: 'Roboto-Thin'),
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        ),
                       ),
                     ],
                   ),
@@ -261,7 +261,11 @@ class ItemWidget extends StatelessWidget {
                               child: Center(
                                 child: TextField(
                                   controller: quantityController,
+                                  keyboardType: TextInputType.number,
                                   textAlignVertical: TextAlignVertical.bottom,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(5.0),
@@ -270,7 +274,7 @@ class ItemWidget extends StatelessWidget {
                                     hintStyle: const TextStyle(
                                         color: Color(0xffB4B4B4), fontSize: 14),
                                     hintText:
-                                        "Please enter tiles quantity here..",
+                                        "Please enter tiles quantity (minimum 1)..",
                                     fillColor: Colors.white,
                                   ),
                                 ),
@@ -281,9 +285,50 @@ class ItemWidget extends StatelessWidget {
                         actions: <Widget>[
                           GestureDetector(
                             onTap: () {
+                              if (quantityController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    backgroundColor: Colors.red,
+                                    content: Text(
+                                      "Please enter a quantity",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              
+                              int quantity = int.tryParse(quantityController.text) ?? 0;
+                              
+                              if (quantity <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    backgroundColor: Colors.red,
+                                    content: Text(
+                                      "Please enter a valid quantity (greater than 0)",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              
+                              if (quantity > item.quantity) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: Colors.red,
+                                    content: Text(
+                                      "Quantity exceeds available stock (${item.quantity})",
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              
                               if (quantityController.text != "" &&
-                                  int.parse(quantityController.text) <=
-                                      item.quantity) {
+                                  quantity > 0 &&
+                                  quantity <= item.quantity) {
                                 showDialog<String>(
                                   context: context,
                                   builder: (BuildContext context) =>
@@ -514,10 +559,9 @@ class ItemWidget extends StatelessWidget {
                     );
                   },
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0, left: 15),
+                    padding: const EdgeInsets.only(top: 10.0, left: 15, right: 15),
                     child: Container(
                       height: 39,
-                      // width: 160,
                       decoration: BoxDecoration(
                           color: Color(0xff000000),
                           borderRadius: BorderRadius.circular(5)),

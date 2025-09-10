@@ -1,7 +1,7 @@
 class APIConstant {
   //static const baseUrl = "http://shyamtiles.koptotech.com";
   // static const baseUrl = "http://16.171.177.96";
-  static const baseUrl = "http://aseemsystems-001-site24.atempurl.com/";
+  static const baseUrl = "https://galactics.co.in/shyamtiles_updated";
 
   static const userLogin = "$baseUrl/index.php/apis/Login";
 

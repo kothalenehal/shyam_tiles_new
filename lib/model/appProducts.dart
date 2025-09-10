@@ -42,7 +42,7 @@ class AppProducts {
       var imageSep = json["image"].toString().split(",");
       for (var img in imageSep) {
         image.add(
-            '${APIConstant.baseUrl}/public/uploads/all_products/thumb_front/$img');
+            '${APIConstant.baseUrl}/public/uploads/all_products/thumb_front/$img?v=${DateTime.now().millisecondsSinceEpoch}');
       }
     }
 
@@ -75,35 +75,36 @@ class AppProducts {
   Future<ResponseSmartAuditor> getProductsByCat(String category,
       {int page = 0, int perPage = 0, String? location}) async {
     try {
-      final String url = APIConstant.appProducts;
+      // Build URL with query parameters for GET request
+      final Uri uri = Uri.parse('https://galactics.co.in/shyamtiles_updated/index.php/apis/getProducts')
+          .replace(queryParameters: {
+        'locations': location ?? AppUser.sharedInstance.location,
+        'category': category,
+        if (page > 0) 'page': page.toString(),
+        if (perPage > 0) 'per_page': perPage.toString(),
+      });
 
       var headers = {
         'Content-Type': 'application/json',
         'Cookie': 'ci_session=vo6oejguc6mfvhmru7pf9keqf2quge8p'
       };
 
-      final Map<String, dynamic> body = {
-        "category": category,
-        "page": page,
-        "per_page": perPage,
-        "locations": location ?? AppUser.sharedInstance.location
-      };
-
-      var request = http.Request('POST', Uri.parse(url));
-      request.body = json.encode(body);
+      var request = http.Request('GET', uri);
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
         String responseBody = await response.stream.bytesToString();
+        print("getProductsByCat API Response: $responseBody"); // Debug print
         Map<String, dynamic> jsonResponse = json.decode(responseBody);
 
         List<AppProducts> products = [];
         if (jsonResponse['data'] != null) {
           for (var item in jsonResponse['data']) {
-            if (item['locations'] ==
-                (location ?? AppUser.sharedInstance.location)) {
+            // Filter by category and location
+            if (item['locations'] == (location ?? AppUser.sharedInstance.location) &&
+                item['category']?.toString().toLowerCase() == category.toLowerCase()) {
               AppProducts product = AppProducts();
               product.dictToObject(item);
               products.add(product);
@@ -111,18 +112,20 @@ class AppProducts {
           }
         }
 
+        print("getProductsByCat - Found ${products.length} products for category: $category"); // Debug print
         return ResponseSmartAuditor()
           ..status = true
           ..statusMessage = "Success"
           ..body = products;
       } else {
+        print("getProductsByCat API Error: ${response.statusCode} - ${response.reasonPhrase}"); // Debug print
         return ResponseSmartAuditor()
           ..status = false
           ..statusMessage = "Error"
           ..errorMessage = response.reasonPhrase ?? "Unknown error";
       }
     } catch (e) {
-      print(e);
+      print("Exception in getProductsByCat: $e"); // Debug print
       return ResponseSmartAuditor()
         ..status = false
         ..statusMessage = "Exception"
@@ -146,25 +149,25 @@ class AppProducts {
 
   Future<ResponseSmartAuditor> getProducts() async {
     try {
-      final String url = 'http://16.171.177.96/index.php/apis/getProducts';
+      // Build URL with query parameters for GET request
+      final Uri uri = Uri.parse('https://galactics.co.in/shyamtiles_updated/index.php/apis/getProducts')
+          .replace(queryParameters: {
+        'locations': AppUser.sharedInstance.location
+      });
 
       var headers = {
         'Content-Type': 'application/json',
         'Cookie': 'ci_session=vo6oejguc6mfvhmru7pf9keqf2quge8p'
       };
 
-      final Map<String, dynamic> body = {
-        "location": AppUser.sharedInstance.location
-      };
-
-      var request = http.Request('POST', Uri.parse(url));
-      request.body = json.encode(body);
+      var request = http.Request('GET', uri);
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
 
       if (response.statusCode == 200) {
         String responseBody = await response.stream.bytesToString();
+        print("API Response: $responseBody"); // Debug print
         Map<String, dynamic> jsonResponse = json.decode(responseBody);
 
         List<AppProducts> products = [];
@@ -178,18 +181,20 @@ class AppProducts {
           }
         }
 
+        print("Processed products count: ${products.length}"); // Debug print
         return ResponseSmartAuditor()
           ..status = true
           ..statusMessage = "Success"
           ..body = products;
       } else {
+        print("API Error: ${response.statusCode} - ${response.reasonPhrase}"); // Debug print
         return ResponseSmartAuditor()
           ..status = false
           ..statusMessage = "Error"
-          ..errorMessage = response.reasonPhrase!;
+          ..errorMessage = response.reasonPhrase ?? "Unknown error";
       }
     } catch (e) {
-      print(e);
+      print("Exception in getProducts: $e"); // Debug print
       return ResponseSmartAuditor()
         ..status = false
         ..statusMessage = "Exception"
@@ -200,7 +205,7 @@ class AppProducts {
   Future<ResponseSmartAuditor> getProductById(String productId) async {
     try {
       final String url =
-          "http://16.171.177.96/index.php/api/product/$productId";
+          "https://galactics.co.in/shyamtiles_updated/index.php/api/product/$productId";
       print("Calling API: $url");
 
       final ResponseSmartAuditor response =
