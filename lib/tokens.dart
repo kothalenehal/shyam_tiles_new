@@ -377,7 +377,7 @@ class _TokenScreenState extends State<TokenScreen> {
     );
   }
 
-  void _showAddTokenBottomSheet(BuildContext context) {
+  void _showAddTokenBottomSheet(BuildContext pageContext) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController dateController =
         TextEditingController(text: DateTime.now().toString().split(' ')[0]);
@@ -395,12 +395,12 @@ class _TokenScreenState extends State<TokenScreen> {
     }
 
     showModalBottomSheet(
-      context: context,
+      context: pageContext,
       isDismissible: true,
       enableDrag: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (sheetContext) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Padding(
@@ -445,7 +445,7 @@ class _TokenScreenState extends State<TokenScreen> {
                                         IconButton(
                                           icon: const Icon(Icons.close),
                                           onPressed: () =>
-                                              Navigator.pop(context),
+                                              Navigator.pop(sheetContext),
                                         ),
                                       ],
                                     ),
@@ -636,18 +636,19 @@ class _TokenScreenState extends State<TokenScreen> {
                                                     await saveToken(newToken);
 
                                                 if (saved) {
+                                                  if (!mounted) return;
                                                   setState(() {
                                                     tokens.add(newToken);
                                                   });
-                                                  Navigator.pop(context);
-                                                  ScaffoldMessenger.of(context)
+                                                  Navigator.pop(sheetContext);
+                                                  ScaffoldMessenger.of(pageContext)
                                                       .showSnackBar(
                                                     SnackBar(
                                                         content: Text(
                                                             'Token saved successfully')),
                                                   );
                                                 } else {
-                                                  ScaffoldMessenger.of(context)
+                                                  ScaffoldMessenger.of(pageContext)
                                                       .showSnackBar(
                                                     SnackBar(
                                                         content: Text(
