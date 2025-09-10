@@ -193,7 +193,7 @@ class ItemWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
+                Container(
                   margin: const EdgeInsets.only(left: 15),
                   child: Row(
                     children: [
@@ -579,8 +579,7 @@ class ItemWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                ],
-              ),
+              ],
             ),
           ),
         ],
