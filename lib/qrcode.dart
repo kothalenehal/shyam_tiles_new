@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shyam_tiles/model/appProducts.dart';
 import 'product_details.dart';
 
@@ -14,18 +14,23 @@ class QRViewExample extends StatefulWidget {
 }
 
 class _QRViewExampleState extends State<QRViewExample> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? qrController;
+  MobileScannerController? scannerController;
   bool isScanning = false; // Flag to manage scanning state
   bool hasScanned = false; // New flag to track if a scan has been processed
+
+  @override
+  void initState() {
+    super.initState();
+    scannerController = MobileScannerController();
+  }
 
   @override
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid) {
-      qrController?.pauseCamera();
+      scannerController?.stop();
     }
-    qrController?.resumeCamera();
+    scannerController?.start();
   }
 
   @override
@@ -37,9 +42,9 @@ class _QRViewExampleState extends State<QRViewExample> {
       ),
       body: Stack(
         children: [
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
+          MobileScanner(
+            controller: scannerController!,
+            onDetect: _onDetect,
           ),
           if (isScanning)
             Center(
@@ -66,32 +71,29 @@ class _QRViewExampleState extends State<QRViewExample> {
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      qrController = controller;
-    });
+  void _onDetect(BarcodeCapture capture) {
+    if (!hasScanned && !isScanning) {
+      setState(() {
+        isScanning = true;
+        hasScanned = true; // Set this to true immediately
+      });
 
-    controller.scannedDataStream.listen((scanData) async {
-      if (!hasScanned && !isScanning) {
-        setState(() {
-          isScanning = true;
-          hasScanned = true; // Set this to true immediately
-        });
-
-        final url = scanData.code.toString();
+      final List<Barcode> barcodes = capture.barcodes;
+      if (barcodes.isNotEmpty) {
+        final url = barcodes.first.rawValue ?? '';
         print("QR code scanned: $url");
 
         final productId = _extractProductIdFromUrl(url);
 
         if (productId != null) {
           print("Extracted Product ID: $productId");
-          await _fetchProductDetails(productId);
+          _fetchProductDetails(productId);
         } else {
           print("Invalid URL format: $url");
           _resetScanState();
         }
       }
-    });
+    }
   }
 
   void _resetScanState() {
@@ -222,7 +224,7 @@ class _QRViewExampleState extends State<QRViewExample> {
 
   @override
   void dispose() {
-    qrController?.dispose();
+    scannerController?.dispose();
     super.dispose();
   }
 }

@@ -80,8 +80,7 @@ class _HomeScreenState extends State<HomeScreen>
       key: _scaffoldKey,
       // backgroundColor: Colors.white,
       backgroundColor: const Color(0xff333333),
-      body: SingleChildScrollView(
-        physics: NeverScrollableScrollPhysics(),
+      body: SafeArea(
         child: Column(
           children: [
             if (_selectedIndex != 3 && _selectedIndex != 4)
@@ -147,7 +146,9 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   )),
-            _widgetOptions[(!istileclicked) ? _selectedIndex : 4],
+            Expanded(
+              child: _widgetOptions[(!istileclicked) ? _selectedIndex : 4],
+            ),
           ],
         ),
       ),
@@ -220,8 +221,13 @@ class _HomeScreenState extends State<HomeScreen>
                               MaterialPageRoute(
                                   builder: (context) => QRViewExample()),
                             );
-                            // Handle the scanned result if needed
-                            print('Scanned QR code data: $result');
+                            if (result != null && result is String && result.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => SearchScreen(result)),
+                              );
+                            }
                           },
                           child: Image.asset(
                             'images/qr-code.png',

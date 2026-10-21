@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'homepage.dart';
 import 'login.dart';
+import 'receptionist_screen.dart';
 import 'package:shyam_tiles/model/user.dart';
+import 'package:shyam_tiles/model/app_settings.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -16,32 +18,54 @@ class SplashScreenState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    AppUser.sharedInstance.getSharedPreferences().then((value) {
-      if (AppUser.sharedInstance.id > 0) {
-        Timer(
-            const Duration(seconds: 1),
-            () => Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const HomeScreen())));
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    // 1. Load user session + cached settings instantly (no network needed)
+    await Future.wait([
+      AppUser.sharedInstance.getSharedPreferences(),
+      AppSettings.sharedInstance.loadCached(),
+    ]);
+
+    // 2. Refresh settings from API in background — never blocks navigation
+    AppSettings.sharedInstance
+        .fetchSettings()
+        .timeout(const Duration(seconds: 5), onTimeout: () => false)
+        .catchError((_) => false);
+
+    final bool isLoggedIn = AppUser.sharedInstance.id > 0;
+
+    if (isLoggedIn) {
+      await Future.delayed(const Duration(seconds: 1));
+    } else {
+      await Future.delayed(const Duration(seconds: 3));
+    }
+
+    if (mounted) {
+      final Widget destination;
+      if (!isLoggedIn) {
+        destination = const Login();
+      } else if (AppUser.sharedInstance.user_type == 3) {
+        destination = const ReceptionistScreen();
       } else {
-        Timer(
-            const Duration(seconds: 3),
-            () => Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const Login())));
+        destination = const HomeScreen();
       }
-    });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => destination,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(color: Color(0xff333333)
-            // gradient: LinearGradient(
-            //   begin: Alignment.topCenter,
-            //   end: Alignment.bottomCenter,
-            //   colors: <Color>[Color(0xffb4b4b4), Color(0xffA5A5A5)],
-            // ),
-            ),
+        decoration: const BoxDecoration(color: Color(0xff333333)),
         height: MediaQuery.of(context).size.height,
         padding:
             EdgeInsets.only(top: MediaQuery.of(context).size.height / 2 - 75),
@@ -73,3 +97,4 @@ class SplashScreenState extends State<MyHomePage> {
     );
   }
 }
+

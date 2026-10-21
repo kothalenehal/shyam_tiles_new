@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VendorTest {
-  static const String baseUrl = "https://galactics.co.in/shyamtiles_updated";
+  static const String baseUrl = "https://shyamtilesadmin.on-forge.com";
   
   // Test credentials from the code comments
   static const List<Map<String, String>> testCredentials = [

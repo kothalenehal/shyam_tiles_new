@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shyam_tiles/common/request.dart';
 import 'package:shyam_tiles/model/user.dart';
 import 'package:shyam_tiles/qrcode.dart';
@@ -76,7 +76,7 @@ class AppProducts {
       {int page = 0, int perPage = 0, String? location}) async {
     try {
       // Build URL with query parameters for GET request
-      final Uri uri = Uri.parse('https://galactics.co.in/shyamtiles_updated/index.php/apis/getProducts')
+      final Uri uri = Uri.parse('https://shyamtilesadmin.on-forge.com/index.php/apis/getProducts')
           .replace(queryParameters: {
         'locations': location ?? AppUser.sharedInstance.location,
         'category': category,
@@ -150,7 +150,7 @@ class AppProducts {
   Future<ResponseSmartAuditor> getProducts() async {
     try {
       // Build URL with query parameters for GET request
-      final Uri uri = Uri.parse('https://galactics.co.in/shyamtiles_updated/index.php/apis/getProducts')
+      final Uri uri = Uri.parse('https://shyamtilesadmin.on-forge.com/index.php/apis/getProducts')
           .replace(queryParameters: {
         'locations': AppUser.sharedInstance.location
       });
@@ -205,7 +205,7 @@ class AppProducts {
   Future<ResponseSmartAuditor> getProductById(String productId) async {
     try {
       final String url =
-          "https://galactics.co.in/shyamtiles_updated/index.php/api/product/$productId";
+          "https://shyamtilesadmin.on-forge.com/index.php/api/product/$productId";
       print("Calling API: $url");
 
       final ResponseSmartAuditor response =

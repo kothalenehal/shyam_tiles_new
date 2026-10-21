@@ -413,7 +413,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     var request = http.Request(
         'POST',
         Uri.parse(
-            'https://galactics.co.in/shyamtiles_updated/api/check-quantity-availability'));
+            'https://shyamtilesadmin.on-forge.com/api/check-quantity-availability'));
     
     // If checkAllLocations is true, don't send specific location to get all locations
     String requestBody;

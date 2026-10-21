@@ -88,4 +88,26 @@ class AppUser {
       return ResponseSmartAuditor();
     }
   }
+
+  Future<ResponseSmartAuditor> registerUser({
+    required String firstName,
+    required String lastName,
+    required String contact,
+    required String password,
+  }) async {
+    try {
+      final String url = APIConstant.registerUser;
+
+      final Map<String, dynamic> body = {
+        "name": firstName,
+        "lastname": lastName,
+        "contact": contact,
+        "password": password,
+      };
+      return await Request.sharedInstance.postRequest(body, url);
+    } catch (e) {
+      print(e);
+      return ResponseSmartAuditor();
+    }
+  }
 }

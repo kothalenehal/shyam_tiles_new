@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:shyam_tiles/common/app_constant.dart';
 import 'package:shyam_tiles/common/reponse.dart';
 import 'package:shyam_tiles/model/user.dart';
+import 'package:shyam_tiles/model/app_settings.dart';
 import 'homepage.dart';
+import 'receptionist_screen.dart';
+import 'signup.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'test_login_page.dart';
 
 TextEditingController txtMobileNumber = TextEditingController(text: "");
 TextEditingController txtPassword = TextEditingController(text: "");
@@ -19,6 +21,15 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   bool buttonEnable = false;
   bool _obscureText = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Re-fetch settings so Sign Up link appears without relying on splash timing
+    AppSettings.sharedInstance.fetchSettings().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,11 +215,17 @@ class _LoginState extends State<Login> {
                                     appUser.dictToObject(data);
                                     appUser.setUserDetailInSharedInstance();
 
+                                    if (!mounted) return;
+
+                                    final Widget destination =
+                                        (appUser.user_type == 3)
+                                            ? const ReceptionistScreen()
+                                            : const HomeScreen();
+
                                     Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (_) =>
-                                                const HomeScreen()));
+                                            builder: (_) => destination));
                                   } else {
                                     showDialog<String>(
                                       context: context,
@@ -311,39 +328,46 @@ class _LoginState extends State<Login> {
                         ),
                       ),
                     ),
-                    // Add test button for debugging
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          left: 20.0, right: 20.0, top: 16, bottom: 0),
-                      child: GestureDetector(
+
+                    // ── Sign Up link (visible only when admin enables it) ──
+                    if (AppSettings.sharedInstance.signupEnabled) ...
+                    [
+                      SizedBox(height: 20),
+                      GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TestLoginPage(),
+                              builder: (_) => const SignUpScreen(),
                             ),
                           );
                         },
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Test Credentials (Debug)',
-                              style: TextStyle(
-                                color: Colors.grey,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                                color: Colors.black54,
                               ),
+                              children: [
+                                const TextSpan(text: "Don't have an account? "),
+                                TextSpan(
+                                  text: 'Sign Up',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w700,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+
                   ],
                 ),
               ),

@@ -13,7 +13,7 @@ void main() async {
 }
 
 Future<void> testAllCredentials() async {
-  const String baseUrl = "https://galactics.co.in/shyamtiles_updated";
+  const String baseUrl = "https://shyamtilesadmin.on-forge.com";
   
   final List<Map<String, String>> testCredentials = [
     {"contact": "123456789", "password": "1234", "description": "From code comments"},
@@ -77,7 +77,7 @@ Future<void> testLogin(String baseUrl, Map<String, String> credentials) async {
 }
 
 Future<void> testContactData() async {
-  const String baseUrl = "https://galactics.co.in/shyamtiles_updated";
+  const String baseUrl = "https://shyamtilesadmin.on-forge.com";
   
   print("Testing Contact Data API...\n");
   

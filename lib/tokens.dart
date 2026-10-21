@@ -49,7 +49,7 @@ class _TokenScreenState extends State<TokenScreen> {
     
     // Use POST request with body for token fetching
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/get'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/apis/token/get'));
     
     request.body = json.encode({
       "vendor_id": AppUser.sharedInstance.id.toString()
@@ -187,7 +187,7 @@ class _TokenScreenState extends State<TokenScreen> {
 
     var request = http.Request(
       'POST',
-      Uri.parse('https://galactics.co.in/shyamtiles_updated/api/delete_token'),
+      Uri.parse('https://shyamtilesadmin.on-forge.com/api/delete_token'),
     );
     
     var requestBody = {
@@ -539,7 +539,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/delete-product'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/apis/token/delete-product'));
 
     // Convert the product data to the required format
     var requestBody = {
@@ -593,7 +593,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/store'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/apis/token/store'));
 
     // Convert the product data to the required format (similar to save token API)
     var requestBody = {
@@ -664,7 +664,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/edit-product'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/apis/token/edit-product'));
 
     // Convert the product data to the required format
     var requestBody = {
@@ -747,7 +747,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/api/edit_token'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/api/edit_token'));
 
     // Convert the token data to the required format (matching the API screenshot)
     var requestBody = {
@@ -837,7 +837,7 @@ class _TokenScreenState extends State<TokenScreen> {
       'Cookie': 'ci_session=f2lli9st2c16fmtr34pf835fb5o733dh'
     };
     var request = http.Request(
-        'POST', Uri.parse('https://galactics.co.in/shyamtiles_updated/apis/token/store'));
+        'POST', Uri.parse('https://shyamtilesadmin.on-forge.com/apis/token/store'));
 
     // Convert the token data to the required format
     // Extract only the date part (YYYY-MM-DD) from the full datetime

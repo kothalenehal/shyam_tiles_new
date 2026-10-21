@@ -63,7 +63,8 @@ class Request {
       var request = http.Request('GET', url);
       request.headers.addAll(headerParam);
 
-      http.StreamedResponse response = await request.send();
+      http.StreamedResponse response =
+          await request.send().timeout(const Duration(seconds: 8));
 
       print("Response status code: ${response.statusCode}");
 

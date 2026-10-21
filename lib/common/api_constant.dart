@@ -1,7 +1,9 @@
 class APIConstant {
-  //static const baseUrl = "http://shyamtiles.koptotech.com";
-  // static const baseUrl = "http://16.171.177.96";
-  static const baseUrl = "https://galactics.co.in/shyamtiles_updated";
+  // Production URL:
+  // static const baseUrl = "https://shyamtilesadmin.on-forge.com";
+
+  // Local MAMP URL (iOS Simulator / Mac):
+  static const baseUrl = "http://127.0.0.1:8888/shyamtiles_admin_panel";
 
   static const userLogin = "$baseUrl/index.php/apis/Login";
 
@@ -19,4 +21,15 @@ class APIConstant {
   static const getWishList = "${baseUrl}/index.php/apis/getWishList";
 
   static const productCategories = "$baseUrl/index.php/apis/productCategories";
+
+  // Sign-up flow
+  static const appSettings = "$baseUrl/index.php/apis/AppSettings";
+  static const registerUser = "$baseUrl/index.php/apis/RegisterUser";
+
+  // Receptionist & Visitors
+  static const addVisitor = "$baseUrl/index.php/apis/addVisitor";
+  static const updateVisitor = "$baseUrl/index.php/apis/updateVisitor";
+  static const getVisitors = "$baseUrl/index.php/apis/getVisitors";
+  static const getSalesmen = "$baseUrl/index.php/apis/getSalesmen";
 }
+
