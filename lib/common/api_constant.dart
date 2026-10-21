@@ -1,9 +1,9 @@
 class APIConstant {
   // Production URL:
-  // static const baseUrl = "https://shyamtilesadmin.on-forge.com";
+  static const baseUrl = "https://shyamtilesadmin.on-forge.com";
 
   // Local MAMP URL (iOS Simulator / Mac):
-  static const baseUrl = "http://127.0.0.1:8888/shyamtiles_admin_panel";
+  // static const baseUrl = "http://127.0.0.1:8888/shyamtiles_admin_panel";
 
   static const userLogin = "$baseUrl/index.php/apis/Login";
 
