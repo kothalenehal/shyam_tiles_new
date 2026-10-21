@@ -25,11 +25,5 @@ class APIConstant {
   // Sign-up flow
   static const appSettings = "$baseUrl/index.php/apis/AppSettings";
   static const registerUser = "$baseUrl/index.php/apis/RegisterUser";
-
-  // Receptionist & Visitors
-  static const addVisitor = "$baseUrl/index.php/apis/addVisitor";
-  static const updateVisitor = "$baseUrl/index.php/apis/updateVisitor";
-  static const getVisitors = "$baseUrl/index.php/apis/getVisitors";
-  static const getSalesmen = "$baseUrl/index.php/apis/getSalesmen";
 }
 

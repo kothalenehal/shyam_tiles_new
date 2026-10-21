@@ -5,7 +5,6 @@ import 'package:shyam_tiles/common/reponse.dart';
 import 'package:shyam_tiles/model/user.dart';
 import 'package:shyam_tiles/model/app_settings.dart';
 import 'homepage.dart';
-import 'receptionist_screen.dart';
 import 'signup.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -217,15 +216,10 @@ class _LoginState extends State<Login> {
 
                                     if (!mounted) return;
 
-                                    final Widget destination =
-                                        (appUser.user_type == 3)
-                                            ? const ReceptionistScreen()
-                                            : const HomeScreen();
-
                                     Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (_) => destination));
+                                            builder: (_) => const HomeScreen()));
                                   } else {
                                     showDialog<String>(
                                       context: context,
