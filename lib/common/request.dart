@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,8 @@ class Request {
   Future<ResponseSmartAuditor> postRequest(
       Map<String, dynamic> requestDict, String requestURL) async {
     try {
-      print("request body $requestDict");
+      // Avoid logging request bodies: login and registration payloads contain
+      // passwords and other personal information.
       print("url $requestURL");
       Map<String, String> headerParam = await getHeaderParam();
 
@@ -32,23 +34,26 @@ class Request {
       http.Response response = await http.post(url,
           headers: headerParam,
           body: json.encode(requestDict),
-          encoding: Encoding.getByName("utf-8"));
+          encoding: Encoding.getByName("utf-8"))
+          .timeout(const Duration(seconds: 20));
 
       final ResponseSmartAuditor objResponse = ResponseSmartAuditor();
-      print("request body $requestDict");
       print("url $requestURL");
 
       objResponse.dictToObject(response.body.toString());
       return objResponse;
     } catch (e) {
-      print(e);
-      print("request body $requestDict");
+      print("POST request failed: $e");
       print("url $requestURL");
       final ResponseSmartAuditor objResponse = ResponseSmartAuditor();
-      objResponse.errorMessage = e.toString();
+      objResponse.errorMessage = e is TimeoutException
+          ? "The server took too long to respond. Please check your connection and try again."
+          : e is SocketException
+              ? "Unable to connect to the server. Please check your internet connection and try again."
+              : "Unable to complete the request. Please try again.";
       objResponse.status = false;
       return objResponse;
-    } finally {}
+    }
   }
 
   Future<ResponseSmartAuditor> getRequest(String requestURL) async {

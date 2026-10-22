@@ -197,10 +197,16 @@ class _LoginState extends State<Login> {
                                   appUser.contact = txtMobileNumber.text;
                                   appUser.password = txtPassword.text;
 
-                                  ResponseSmartAuditor responseSmartAuditor =
-                                      await appUser.userLogin();
-
-                                  UtilFunctions.hideLoader();
+                                  late final ResponseSmartAuditor
+                                      responseSmartAuditor;
+                                  try {
+                                    responseSmartAuditor =
+                                        await appUser.userLogin();
+                                  } finally {
+                                    // Close the blocking dialog even if the
+                                    // request or response parsing throws.
+                                    UtilFunctions.hideLoader();
+                                  }
                                   
                                   // Add debugging information
                                   print("Login Response Status: ${responseSmartAuditor.status}");
