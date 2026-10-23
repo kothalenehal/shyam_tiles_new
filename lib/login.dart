@@ -6,6 +6,7 @@ import 'package:shyam_tiles/model/user.dart';
 import 'package:shyam_tiles/model/app_settings.dart';
 import 'homepage.dart';
 import 'receptionist_screen.dart';
+import 'owner_dashboard.dart';
 import 'signup.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -217,10 +218,16 @@ class _LoginState extends State<Login> {
 
                                     if (!mounted) return;
 
-                                    final Widget destination =
-                                        (appUser.user_type == 3)
-                                            ? const ReceptionistScreen()
-                                            : const HomeScreen();
+                                    final Widget destination;
+                                    if (appUser.user_type ==
+                                        AppUser.ownerUserType) {
+                                      destination =
+                                          const OwnerDashboardScreen();
+                                    } else if (appUser.user_type == 3) {
+                                      destination = const ReceptionistScreen();
+                                    } else {
+                                      destination = const HomeScreen();
+                                    }
 
                                     Navigator.pushReplacement(
                                         context,

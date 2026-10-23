@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'homepage.dart';
 import 'login.dart';
 import 'receptionist_screen.dart';
+import 'owner_dashboard.dart';
 import 'package:shyam_tiles/model/user.dart';
 import 'package:shyam_tiles/model/app_settings.dart';
 
@@ -46,6 +47,8 @@ class SplashScreenState extends State<MyHomePage> {
       final Widget destination;
       if (!isLoggedIn) {
         destination = const Login();
+      } else if (AppUser.sharedInstance.user_type == AppUser.ownerUserType) {
+        destination = const OwnerDashboardScreen();
       } else if (AppUser.sharedInstance.user_type == 3) {
         destination = const ReceptionistScreen();
       } else {
@@ -97,4 +100,3 @@ class SplashScreenState extends State<MyHomePage> {
     );
   }
 }
-

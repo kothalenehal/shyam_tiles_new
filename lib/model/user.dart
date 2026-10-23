@@ -8,6 +8,7 @@ import '../common/app_constant.dart';
 
 class AppUser {
   static final sharedInstance = AppUser();
+  static const int ownerUserType = 4;
   //id: 1, name: Bhopal, email: bhopal@gmail.com, password: 1234,
   // vendor_location: Shiroli, contact: 123456789, status: 0,
   // created_at: 2022-09-10 09:45:04, updated_at: 2022-09-23 14:46:45

@@ -8,7 +8,7 @@ class APIConstant {
   static const userLogin = "$baseUrl/index.php/apis/Login";
 
   static const appBanners = "$baseUrl/index.php/apis/BannerImages";
-  static const appGallery = "$baseUrl/index.php/apis/GalleryImages";
+  static const appGallery = "$baseUrl/index.php/apisR/GalleryImages";
 
   static const appContact = "$baseUrl/index.php/apis/ContactData";
   static const appProducts = "$baseUrl/index.php/apis/getProducts";
@@ -31,5 +31,6 @@ class APIConstant {
   static const updateVisitor = "$baseUrl/index.php/apis/updateVisitor";
   static const getVisitors = "$baseUrl/index.php/apis/getVisitors";
   static const getSalesmen = "$baseUrl/index.php/apis/getSalesmen";
+  static const ownerSalesmenPerformance =
+      "$baseUrl/index.php/apis/owner/salesmen-performance";
 }
-
